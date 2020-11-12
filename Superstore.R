@@ -1,0 +1,97 @@
+install.packages("ISLR")
+
+library(ggplot2)
+library(corrplot)
+library(cluster) 
+library(fpc)
+library(readr)
+library(dplyr)
+library(ISLR)
+library(corrplot)
+library(plotrix)
+
+## Amount of orders per region
+
+SampleSuperstore <- read_csv("SampleSuperstore.csv")
+
+orderregion<- table(SampleSuperstore$Region)
+orderregion
+barplot(orderregion, main = "Total orders by Region", xlab = "Region", col = "blue")
+
+## Percentage of sales for each category
+
+sales<- SampleSuperstore %>%
+  group_by(Category) %>%
+  summarize(Sales=sum(Sales))
+
+pchart<- round(sales$Sales/sum(sales$Sales)*100)
+
+pienames<- paste(sales$Category,pchart)
+pienames<- paste(pienames, "%", sep = " ")
+
+pie3D(sales$Sales, labels = pienames, explode = 0.1, main = "Sales by category")
+
+## Profit earned by each sub-category
+
+SStore<- SampleSuperstore
+
+Sprofit<- SStore %>%
+  select(`Sub-Category`, Profit) %>%
+  group_by(`Sub-Category`) %>%
+  summarise(sum(Profit))
+
+Sprofit$Profit<- Sprofit$`sum(Profit)`
+Sprofit$`sum(Profit)`<- NULL
+
+Sprofit %>%
+  group_by(`Sub-Category`) %>%
+  ggplot(aes(x= `Sub-Category`,y= Profit, fill= (Profit)))+
+  geom_bar(position = 'dodge', stat = "identity")+
+  scale_y_continuous(name = "Profit",labels = scales::comma) +
+  ggtitle("Sales by category")+
+  ylab("Sales")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+## Quantity of sales by each sub-category
+
+ggplot(data = SStore,aes(x=`Sub-Category`, y=Sales,fill =(Sales))) +
+  geom_bar(position = 'dodge', stat="identity") +
+  facet_wrap(~Category)+
+  scale_y_continuous(name = "Sales",labels = scales::comma) +
+  xlab("Sub-Category") +
+  ggtitle("Sales for each Catgory") +
+  labs(fill = 'Sales Quantity') +
+  theme(axis.text.x = element_text(angle = 90))
+
+## Relationship between discount and profit
+
+Sdisc<- SStore %>%
+  select(Category, `Sub-Category`, Profit, Sales, Discount) %>%
+  group_by(Category) %>%
+  summarise(`Sub-Category`, Profit, Sales, Discount)
+
+Sdisc %>%
+  group_by(Category) %>%
+  ggplot(aes(x= Discount,y= Profit, fill= (Category)))+
+  geom_bar(position = 'dodge', stat = "identity")+
+  scale_y_continuous(name = "Profit",labels = scales::comma) +
+  ggtitle("Sales by category")+
+  ylab("Sales")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+## Relationship between shipping mode and profit
+
+Sship<- SStore %>%
+  select(Category, `Sub-Category`,`Ship Mode`, Profit, Sales, Discount) %>%
+  group_by(Category) %>%
+  summarise(`Sub-Category`, Profit, `Ship Mode`)
+
+Sship %>%
+  group_by(Category) %>%
+  ggplot(aes(x= `Ship Mode`,y= Profit, fill= (Category)))+
+  geom_bar(position = 'dodge', stat = "identity")+
+  scale_y_continuous(name = "Profit",labels = scales::comma) +
+  ggtitle("Sales by category")+
+  ylab("Sales")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
